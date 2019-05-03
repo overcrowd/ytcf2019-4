@@ -44,8 +44,8 @@ export class Worker {
             //   если нет, то убираем из телепорта, если есть там такая
             this.store.timeline[time].trackedCars.forEach(carId => {
                 if (this.store.cars[carId].status === CarStatus.ON_TRACK) {
-                    let curtrack = this.store.cars[carId].tracks[time];
-                    this.store.portal.checkTrack(carId, curtrack);
+                    let coord = this.store.cars[carId].tracks[time];
+                    this.store.portal.checkCarLocation(carId, coord);
                 }
             });
 

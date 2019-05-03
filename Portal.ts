@@ -1,7 +1,7 @@
 import * as winston from "winston";
 
 
-export interface Apex {
+export type Coord = {
     x: number;
     y: number;
 }
@@ -9,7 +9,7 @@ export interface Apex {
 
 class Polygon {
     protected logger: winston.Logger;
-    protected apexes: Apex[] = [];
+    protected apexes: Coord[] = [];
     protected square: number = 0;
 
 
@@ -18,9 +18,8 @@ class Polygon {
     }
 
 
-    public addApex(apex: Apex): void {
+    public addApex(apex: Coord): void {
         this.apexes.push(apex);
-
 
         // подсчитываем собственную площадь (если вершин уже 3 и более)
         // считается по кол-ву треугольников, равному nApexes-2 (базовая и последняя вершины) - именно так происходит сечение
@@ -37,20 +36,20 @@ class Polygon {
     }
 
 
-    protected checkCoordinate(apex0: Apex): boolean {
+    protected isInPolygon(coord: Coord): boolean {
         if (this.square === 0) throw new Error("self square is 0");
 
         let squareNew = 0;
         for (let i = 0; i < this.apexes.length - 1; i++) {
-            squareNew += this.getTriangleSquare(apex0, this.apexes[i], this.apexes[i+1]);
+            squareNew += this.getTriangleSquare(coord, this.apexes[i], this.apexes[i+1]);
         }
-        squareNew += this.getTriangleSquare(apex0, this.apexes[this.apexes.length - 1], this.apexes[0]);
+        squareNew += this.getTriangleSquare(coord, this.apexes[this.apexes.length - 1], this.apexes[0]);
 
         return this.square.toFixed(3) === squareNew.toFixed(3) ? true : false;
     }
 
 
-    protected getTriangleSquare(apex0: Apex, apex1: Apex, apex2: Apex): number {
+    private getTriangleSquare(apex0: Coord, apex1: Coord, apex2: Coord): number {
         const a = Math.sqrt(Math.pow((apex0.x - apex1.x), 2) + Math.pow((apex0.y - apex1.y), 2))
         const b = Math.sqrt(Math.pow((apex1.x - apex2.x), 2) + Math.pow((apex1.y - apex2.y), 2))
         const c = Math.sqrt(Math.pow((apex2.x - apex0.x), 2) + Math.pow((apex2.y - apex0.y), 2))
@@ -65,6 +64,7 @@ class Polygon {
 }
 
 
+
 export class Portal extends Polygon {
     private queue: number[] = [];
 
@@ -74,9 +74,9 @@ export class Portal extends Polygon {
     }
 
 
-    public checkTrack(carId: number, curtrack: Apex): void {
-        let message = `carId=${carId}: track [${curtrack.x}, ${curtrack.y}] `;
-        if (this.checkCoordinate(curtrack)) {
+    public checkCarLocation(carId: number, coord: Coord): void {
+        let message = `carId=${carId}: track [${coord.x}, ${coord.y}] `;
+        if (this.isInPolygon(coord)) {
             if (!this.queue.includes(carId)) {
                 this.queue.push(carId);
                 message += `IS IN PORTAL - #${carId} added to teleport queue`;

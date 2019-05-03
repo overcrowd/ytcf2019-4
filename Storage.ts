@@ -2,7 +2,7 @@ const util = require("util");
 const fs = require('fs');
 import * as winston from "winston";
 
-import { Apex, Portal } from "./Polygon";
+import { Coord, Portal } from "./Portal";
 
 
 
@@ -14,7 +14,7 @@ export enum CarStatus {
 
 type Car = {
     status: CarStatus,
-    tracks: {[time: number]: Apex}
+    tracks: {[time: number]: Coord}
 }
 interface Cars {
     [carId: number]: Car
@@ -36,7 +36,9 @@ export class Storage {
     private _cars: Cars = {};
 
 
-    constructor(private logger: winston.Logger) {}
+    constructor(private logger: winston.Logger) {
+        this._portal = new Portal(this.logger);
+    }
 
 
     public async load(filename: string): Promise<any> {
@@ -47,7 +49,6 @@ export class Storage {
 
         let nApex = parseInt(data[0]);
 
-        this._portal = new Portal(this.logger);
         let dots: number[] = data[1].split(" ").map(element => parseInt(element));
         for (let i = 0; i < nApex; i++) {
             this._portal.addApex( {x: dots[i*2], y: dots[i*2 + 1]} );
@@ -67,7 +68,6 @@ export class Storage {
                 let time = trackdata[itrack*3 + 1],
                     x = trackdata[itrack*3 + 2],
                     y = trackdata[itrack*3 + 3];
-                // console.log(`track {time=${time}, x: ${x}, y: ${y}}`);
 
                 // каждый трек пишем
                 // 1) в машину
