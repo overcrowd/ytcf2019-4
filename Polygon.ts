@@ -1,3 +1,4 @@
+import * as winston from "winston";
 
 
 export interface Apex {
@@ -7,8 +8,14 @@ export interface Apex {
 
 
 class Polygon {
+    protected logger: winston.Logger;
     protected apexes: Apex[] = [];
     protected square: number = 0;
+
+
+    constructor(logger: winston.Logger) {
+        this.logger = logger;
+    }
 
 
     public addApex(apex: Apex): void {
@@ -17,21 +24,20 @@ class Polygon {
 
         // подсчитываем собственную площадь (если вершин уже 3 и более)
         // считается по кол-ву треугольников, равному nApexes-2 (базовая и последняя вершины) - именно так происходит сечение
-        if (this.apexes.length < 3) return ;
-
-        let apex0 = this.apexes[0];
-        let square = 0;
-        for (let i = 1; i < this.apexes.length - 1; i++) {
-            square += this.getTriangleSquare(apex0, this.apexes[i], this.apexes[i+1]);
+        if (this.apexes.length >= 3) {
+            let apex0 = this.apexes[0];
+            let square = 0;
+            for (let i = 1; i < this.apexes.length - 1; i++) {
+                square += this.getTriangleSquare(apex0, this.apexes[i], this.apexes[i+1]);
+            }
+            this.square = square;
         }
 
-        console.log("SELF SQUARE = " + square);
-        this.square = square;
+        this.logger.debug(`Polygon: adding new apex #${this.apexes.length}, SELF SQUARE = ${this.square}`);
     }
 
 
     protected checkCoordinate(apex0: Apex): boolean {
-        // console.log(`CHECKING: x=${apex0.x}, y=${apex0.y}`)
         if (this.square === 0) throw new Error("self square is 0");
 
         let squareNew = 0;
@@ -40,7 +46,6 @@ class Polygon {
         }
         squareNew += this.getTriangleSquare(apex0, this.apexes[this.apexes.length - 1], this.apexes[0]);
 
-        // console.log(`SQUARE2 = ${squareNew}`);
         return this.square.toFixed(3) === squareNew.toFixed(3) ? true : false;
     }
 
@@ -64,8 +69,13 @@ export class Portal extends Polygon {
     private queue: number[] = [];
 
 
+    constructor(logger: winston.Logger) {
+        super(logger);
+    }
+
+
     public checkTrack(carId: number, curtrack: Apex): void {
-        let message = `carId=${carId}: track [${curtrack.x}, ${curtrack.y}] \t`;
+        let message = `carId=${carId}: track [${curtrack.x}, ${curtrack.y}] `;
         if (this.checkCoordinate(curtrack)) {
             if (!this.queue.includes(carId)) {
                 this.queue.push(carId);
@@ -79,16 +89,16 @@ export class Portal extends Polygon {
             } else
                 message += "OUTSIDE"
         }
-        console.log(message);
+        this.logger.info(message);
     }
 
     public openPortal(): number {
         if (this.queue.length > 0) {
             let teleportedCarId = this.queue.shift();
-            console.log(`PORTAL OPENED: #${teleportedCarId} HAS BEEN TELEPORTED`);
+            this.logger.info(`PORTAL OPENED: #${teleportedCarId} HAS BEEN TELEPORTED`);
             return teleportedCarId;
         } else {
-            console.log("PORTAL OPENED: no cars in queue");
+            this.logger.info("PORTAL OPENED: no cars in queue");
             return 0;
         }
     }

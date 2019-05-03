@@ -1,37 +1,41 @@
+import * as winston from "winston";
 import {Storage, CarStatus} from "./Storage";
-
-// import events = require('events');
-// class Database extends events.EventEmitter {
-
-// import {EventEmitter} from 'events';
-// class Database extends EventEmitter {
-
-
-// class Teleport {
-//     private
-// }
 
 
 export class Worker {
+    private logger: winston.Logger;
+    // log.debug('hello');
+    // log.error({logtoken: 'BF455DEC838A', message: "beeing belling is a defeat for the cat"});
     private store: Storage;
     private teleport: number[] = [];
 
+
     constructor() {
-        this.store = new Storage();
+        this.logger = winston.createLogger({
+            levels: winston.config.syslog.levels,
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.printf(msg => `${msg.timestamp} [${msg.level}]: ${msg.logtoken ? msg.logtoken + " - " + msg.message : msg.message}`)
+            ),
+            transports: [
+                new winston.transports.Console({level: 'debug'})
+            ]
+        });
+        this.store = new Storage(this.logger);
     }
+
 
     public async start() {
         await this.store.load('./datain.txt');
-        console.log("...");
 
         this.process();
     }
 
+
     private process(): void {
+        this.logger.info("start processing...");
         for (let time in this.store.timeline) {
-            console.log(`TIME = ${time}`)
-            // console.log(this.store.timeline[time].trackedCars);
-            // console.log(this.store.timeline[time].portal);
+            this.logger.info(`TIME = ${time}`)
 
             // сначала берем все машины
             //   если машина не телепортирована, то проверяем треки
@@ -51,8 +55,10 @@ export class Worker {
             //   - помечаем такую машину, как телепортированную
             if (this.store.timeline[time].portal === "opened") {
                 let teleportedCarId = this.store.portal.openPortal();
-                if (teleportedCarId)
+                if (teleportedCarId) {
                     this.store.cars[teleportedCarId].status = CarStatus.TELEPORTED;
+                    this.logger.debug("car status marked as teleported");
+                }
             }
         }
     }

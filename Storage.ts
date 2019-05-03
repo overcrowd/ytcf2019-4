@@ -1,5 +1,6 @@
 const util = require("util");
 const fs = require('fs');
+import * as winston from "winston";
 
 import { Apex, Portal } from "./Polygon";
 
@@ -33,17 +34,18 @@ export class Storage {
     private _cars: Cars = {};
 
 
+    constructor(private logger: winston.Logger) {}
+
+
     public async load(filename: string): Promise<any> {
         const readFile = util.promisify(fs.readFile);
 
         let data = await readFile(filename, 'utf8');
         data = data.split('\n');
-        // console.log('arr', data);
-
 
         let nApex = parseInt(data[0]);
 
-        this._portal = new Portal();
+        this._portal = new Portal(this.logger);
         let dots: number[] = data[1].split(" ").map(element => parseInt(element));
         for (let i = 0; i < nApex; i++) {
             this._portal.addApex( {x: dots[i*2], y: dots[i*2 + 1]} );
@@ -78,12 +80,10 @@ export class Storage {
                 this._timeline[time].trackedCars.push(carId);
             }
         }
-        // console.log(nApex, dots, this._polygon, nCars);
 
         let portaldata = data[ data.length-2 ].split(' ');
         for (let i = 1; i < portaldata.length; i++) {
             let time = portaldata[i];
-            // console.log(`portal ${time}`);
 
             if (!this._timeline[time])
                 this._timeline[time] = {
@@ -94,9 +94,8 @@ export class Storage {
                 this._timeline[time].portal = "opened";
         }
 
-        console.log("CARS: ", util.inspect(this._cars, null, 3));
-        console.log("TIMELINE: ", this._timeline);
-
+        this.logger.debug("CARS: " + util.inspect(this._cars, null, 3));
+        this.logger.debug("TIMELINE: " + util.inspect(this._timeline, null, 3));
         return Promise.resolve();
     }
 
