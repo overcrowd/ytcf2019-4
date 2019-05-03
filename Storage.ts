@@ -11,19 +11,21 @@ export enum CarStatus {
     ON_TRACK = "ontrack",
     TELEPORTED = "teleported"
 }
-interface Car {
+
+type Car = {
     status: CarStatus,
     tracks: {[time: number]: Apex}
 }
-
-interface Timeline {
-    [time: number]: {
-        portal: "opened" | null,
-        trackedCars: number[]
-    }
-}
 interface Cars {
     [carId: number]: Car
+}
+
+type portalOpened = "opened" | null;
+interface Timeline {
+    [time: number]: {
+        portal: portalOpened,
+        trackedCars: number[]
+    }
 }
 
 
