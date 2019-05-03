@@ -1,7 +1,7 @@
 const util = require("util");
 const fs = require('fs');
 
-import { Apex, Polygon } from "./Polygon";
+import { Apex, Portal } from "./Polygon";
 
 
 
@@ -28,7 +28,7 @@ interface Cars {
 
 
 export class Storage {
-    private _polygon: Polygon;
+    private _portal: Portal;
     private _timeline: Timeline = {};
     private _cars: Cars = {};
 
@@ -43,10 +43,10 @@ export class Storage {
 
         let nApex = parseInt(data[0]);
 
-        this._polygon = new Polygon();
+        this._portal = new Portal();
         let dots: number[] = data[1].split(" ").map(element => parseInt(element));
         for (let i = 0; i < nApex; i++) {
-            this._polygon.addApex( {x: dots[i*2], y: dots[i*2 + 1]} );
+            this._portal.addApex( {x: dots[i*2], y: dots[i*2 + 1]} );
         }
 
         let nCars = parseInt(data[2]);
@@ -107,7 +107,7 @@ export class Storage {
     get cars(): Cars {
         return this._cars;
     }
-    get polygon(): Polygon {
-        return this._polygon;
+    get portal(): Portal {
+        return this._portal;
     }
 }
