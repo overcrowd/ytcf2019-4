@@ -18,11 +18,13 @@ export class Worker {
                 winston.format.printf(msg => `${msg.timestamp} [${msg.level}]: ${msg.logtoken ? msg.logtoken + " - " + msg.message : msg.message}`)
             ),
             transports: [
-                new winston.transports.Console({level: 'debug'})
+                new winston.transports.Console({level: 'info'})
             ]
         });
         this.store = new Storage(this.logger);
     }
+
+
 
 
     public async start() {
@@ -34,6 +36,10 @@ export class Worker {
 
     private process(): void {
         this.logger.info("start processing...");
+
+        // в хранилище после парсинга уже собраны все необходимые структуры данных
+        // здесь мы последовательно идем по шкале времени и выполняем события, сначала перемещения, потом открытия
+        //
         for (let time in this.store.timeline) {
             this.logger.info(`TIME = ${time}`)
 

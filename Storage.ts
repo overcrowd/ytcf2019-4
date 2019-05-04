@@ -41,6 +41,29 @@ export class Storage {
     }
 
 
+    /**
+     * метод парсинга файла
+     *
+     * готовит две основные структуры данных
+     * Cars содержит статус авто (по умолчанию ontrack, но если машина телепортируется, то больше она не учавствует в расчетах)
+     *      и список треков (время - координата)
+     * Cars: {
+     *   '1': { status: 'ontrack', tracks: { '1': { x: -2, y: 1 } } },
+     *   '2': { status: 'ontrack', tracks: { '2': { x: 0, y: 0 } } },
+     *   '3': { status: 'ontrack', tracks: { '3': { x: 0, y: 0 } } },
+     *   '4': { status: 'ontrack', tracks: { '4': { x: 1, y: 1 } } } }
+     *
+     * Timeline содержит упорядоченную временную шкалу с событиями (открытие портала или перемещение авто)
+     * В поле trackedCars пишем id тех машин, которые перемещались в это время, а сам трек будет взят из массива авто при просчете
+     * Timeline: {
+     *   '0': { portal: 'opened', trackedCars: [] },
+     *   '1': { portal: null, trackedCars: [ 1 ] },
+     *   '2': { portal: 'opened', trackedCars: [ 2 ] },
+     *   '3': { portal: null, trackedCars: [ 3 ] },
+     *   '4': { portal: 'opened', trackedCars: [ 4 ] },
+     *   '5': { portal: 'opened', trackedCars: [] },
+     *   '6': { portal: 'opened', trackedCars: [] } }
+     */
     public async load(filename: string): Promise<any> {
         const readFile = util.promisify(fs.readFile);
 
